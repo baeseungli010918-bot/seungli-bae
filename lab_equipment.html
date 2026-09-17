@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>XAM Lab · 장비 관리 시스템</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="sidebar-scrim" id="sidebarScrim" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">X</div>
+      <div class="txt">
+        <div class="name">XAM Lab</div>
+        <div class="sub">Equipment Platform</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">메인</div>
+    <nav class="sidebar-nav">
+      <button class="side-link active" data-page="dashboard" onclick="showPage('dashboard', this)"><span class="ic">🏠</span>
+        대시보드</button>
+      <button class="side-link" data-page="reservation" onclick="showPage('reservation', this)"><span class="ic">📅</span>일정</button>
+      <button class="side-link" data-page="equipment" onclick="showPage('equipment', this)"><span class="ic">🖨️</span>장비</button>
+      <button class="side-link" data-page="research" onclick="showPage('research', this)"><span class="ic">📋</span>연구 관리</button>
+    </nav>
+
+    <div class="sidebar-section">운영</div>
+    <nav class="sidebar-nav">
+      <button class="side-link" data-page="consumables" onclick="showPage('consumables', this)"><span class="ic">📦</span>소모품</button>
+      <button class="side-link" data-page="usage" onclick="showPage('usage', this)"><span class="ic">🧾</span>사용 기록</button>
+    </nav>
+
+    <div class="sidebar-section">분석</div>
+    <nav class="sidebar-nav">
+      <button class="side-link" data-page="ai-advisor" onclick="showPage('ai-advisor', this)"><span class="ic">🤖</span>AI 조언</button>
+      <button class="side-link" data-page="quality" onclick="showPage('quality', this)"><span class="ic">📸</span>불량 분석</button>
+      <button class="side-link" data-page="stats" onclick="showPage('stats', this)"><span class="ic">📈</span>통계</button>
+      <button class="side-link" data-page="reports" onclick="showPage('reports', this)"><span class="ic">🧮</span>리포트</button>
+    </nav>
+
+    <div class="sidebar-section">공지</div>
+    <nav class="sidebar-nav">
+      <button class="side-link" data-page="announcements" onclick="showPage('announcements', this)"><span class="ic">📢</span>공지사항</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="side-link" onclick="cycleTheme()"><span class="ic" id="themeIcon">🖥️</span><span id="themeLabel">시스템 테마</span></button>
+      <a class="side-link" href="/admin"><span class="ic">🔧</span>관리자 콘솔</a>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topheader">
+      <button class="icon-btn menu-toggle" onclick="toggleSidebar()" title="메뉴">☰</button>
+      <div class="titles">
+        <div class="page-title" id="pageTitle">대시보드</div>
+        <div class="page-sub" id="pageSub">XAM 연구실 · 장비 관리 플랫폼</div>
+      </div>
+      <div class="hdr-actions">
+        <button class="icon-btn" id="themeToggle" onclick="cycleTheme()" title="테마 전환">🖥️</button>
+      </div>
+    </header>
+
+    <div class="container">
+
+      <!-- ============ 대시보드 ============ -->
+      <div id="dashboard" class="page active">
+        <div class="page-header">
+          <h1>XAM 장비 관리 시스템에 오신 것을 환영합니다</h1>
+          <p>실시간 장비 현황과 운영 지표를 한눈에 확인하세요</p>
+        </div>
+
+        <div id="dashboardLowStock"></div>
+
+        <div class="kpi-grid" id="dashboardKpis"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><span class="t">장비 가동 현황</span><span class="hint" style="margin:0;">최근 7일</span></div>
+            <div id="weeklyChart"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">최근 활동</div>
+            <div id="recentActivity"></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">인기 장비 (최근 30일)</div>
+            <div id="topEquipment"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">최다 사용자 (최근 30일)</div>
+            <div id="topUsers"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="t">🛠️ 점검 알림</span></div>
+          <div id="maintenanceAlerts"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="t">🔥 우선순위 작업</span></div>
+          <div id="dashboardPriorityTasks"></div>
+          <div style="margin-top:14px; text-align:right;">
+            <button class="btn btn-ghost btn-sm" onclick="showPage('research', document.querySelector('[data-page=research]'))">연구 관리로 이동 →</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="t">📢 공지사항</span><button class="btn btn-sm btn-ghost" onclick="showPage('announcements', document.querySelector('[data-page=announcements]'))">전체 보기</button></div>
+          <div id="dashboardAnnouncements"></div>
+        </div>
+      </div>
+
+      <!-- ============ 일정 (예약) ============ -->
+      <div id="reservation" class="page">
+        <div class="page-header">
+          <h1>일정</h1>
+          <p>장비를 예약하고 전체 일정을 관리하세요</p>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="card">
+              <div class="card-title">예약 신청</div>
+              <div id="reservation-alert"></div>
+
+              <div class="form-group">
+                <label>이름</label>
+                <input type="text" id="resUser" placeholder="성명 또는 닉네임" oninput="renderReservations()">
+              </div>
+
+              <div class="form-group">
+                <label>장비 선택</label>
+                <div class="equipment-grid" id="equipmentGrid"></div>
+                <div id="bestTimeHint"></div>
+              </div>
+
+              <div class="form-group">
+                <label>예약 날짜</label>
+                <input type="date" id="resDate">
+              </div>
+
+              <div class="form-group">
+                <label>시작 시간</label>
+                <input type="time" id="resStart" step="60">
+              </div>
+
+              <div class="form-group">
+                <label>소요 시간 (분) — 자유 입력</label>
+                <div class="duration-row">
+                  <input type="number" id="resDuration" placeholder="예: 60, 32, 195" min="5" max="1440" oninput="updateEndPreview()">
+                  <button type="button" class="preset-btn" onclick="setDuration(30)">30분</button>
+                  <button type="button" class="preset-btn" onclick="setDuration(60)">1시간</button>
+                  <button type="button" class="preset-btn" onclick="setDuration(90)">1.5시간</button>
+                  <button type="button" class="preset-btn" onclick="setDuration(120)">2시간</button>
+                  <button type="button" class="preset-btn" onclick="setDuration(240)">4시간</button>
+                </div>
+                <div class="hint" id="endPreview"></div>
+              </div>
+
+              <div class="form-group">
+                <label>팀원 (쉼표로 구분, 선택)</label>
+                <input type="text" id="resParticipants" placeholder="예: 홍길동, 김철수">
+              </div>
+
+              <div class="form-group">
+                <label><input type="checkbox" id="resRepeat" onchange="toggleRepeat()">&nbsp;매주 반복 예약</label>
+                <div id="repeatWeeksWrap" style="display:none; margin-top:8px;">
+                  <input type="number" id="resRepeatWeeks" min="1" max="12" value="4" placeholder="반복 주 수 (최대 12)">
+                  <div class="hint">같은 요일·시간으로 지정한 주 수만큼 자동 생성됩니다. 겹치는 주는 자동 제외됩니다.</div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>목적 / 설명</label>
+                <textarea id="resPurpose" rows="2" placeholder="무엇을 하실 건가요?"></textarea>
+              </div>
+
+              <button class="btn btn-primary" onclick="createReservation()">예약 신청</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title" id="timelineTitle">선택한 장비의 당일 예약 현황</div>
+              <div id="timeline"><div class="empty"><div class="e-icon">📅</div><div class="e-title">장비와 날짜를 선택하세요</div></div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="card-title">등급별 예약 한도</div>
+              <div id="rolesInfo"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">내 예약</div>
+              <div class="table-wrap"><table class="table">
+                <thead><tr><th>장비</th><th>일시</th><th>상태</th><th></th></tr></thead>
+                <tbody id="myReservations"></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">전체 예약 현황</div>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th>장비</th><th>사용자</th><th>날짜</th><th>시간</th><th>상태</th><th></th></tr></thead>
+            <tbody id="allReservations"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ============ 장비 ============ -->
+      <div id="equipment" class="page">
+        <div class="page-header">
+          <h1>장비</h1>
+          <p>보유 장비와 실시간 가동 상태입니다. 수량·비용 관리는 관리자 콘솔에서 진행하세요</p>
+        </div>
+        <div class="equipment-grid" id="equipmentPageGrid"></div>
+      </div>
+
+      <!-- ============ 연구 관리 (NEW) ============ -->
+      <div id="research" class="page">
+        <div class="page-header">
+          <h1>연구 관리</h1>
+          <p>진행 중인 연구 프로젝트의 우선순위와 마감일을 관리하세요</p>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+          <button class="btn btn-primary" style="width:auto;" onclick="openResearchModal()">+ 새 연구 추가</button>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px;">
+          <button class="preset-btn priority-filter-btn active" onclick="filterResearch('all', this)">전체</button>
+          <button class="preset-btn priority-filter-btn" onclick="filterResearch('urgent', this)">🔴 긴급</button>
+          <button class="preset-btn priority-filter-btn" onclick="filterResearch('high', this)">🟠 높음</button>
+          <button class="preset-btn priority-filter-btn" onclick="filterResearch('medium', this)">🟡 보통</button>
+          <button class="preset-btn priority-filter-btn" onclick="filterResearch('low', this)">🟢 낮음</button>
+        </div>
+
+        <div id="researchList" class="research-grid"></div>
+      </div>
+
+      <!-- ============ 소모품 ============ -->
+      <div id="consumables" class="page">
+        <div class="page-header">
+          <h1>소모품</h1>
+          <p>소모품 재고와 한도 재고량을 관리하세요</p>
+        </div>
+
+        <div id="consumableLowStock"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">새 소모품 추가</div>
+            <div id="consumable-alert"></div>
+
+            <div class="form-group"><label>소모품명</label><input type="text" id="consName" placeholder="예: TPU 필라멘트, 레진, 노즐"></div>
+
+            <div class="form-group"><label>카테고리</label>
+              <select id="consCategory">
+                <option value="필라멘트">필라멘트</option>
+                <option value="레진">레진</option>
+                <option value="노즐">노즐</option>
+                <option value="기타">기타</option>
+              </select>
+            </div>
+
+            <div class="form-group"><label>현재 재고</label><input type="number" id="consStock" placeholder="0" step="0.1"></div>
+            <div class="form-group"><label>한도 재고량 (미만이면 부족 알림)</label><input type="number" id="consMinStock" placeholder="예: 2" step="0.1"></div>
+
+            <div class="form-group"><label>단위</label>
+              <select id="consUnit">
+                <option value="kg">kg</option><option value="g">g</option><option value="L">L</option>
+                <option value="ml">ml</option><option value="ea">개</option><option value="box">상자</option>
+              </select>
+            </div>
+
+            <div class="form-group"><label>단가 (원, 선택 — 리포트 비용 계산용)</label><input type="number" id="consUnitPrice" placeholder="0" step="100"></div>
+
+            <div class="form-group"><label>색상 태그</label>
+              <input type="color" id="consColor" value="#185fa5" style="height:42px; padding:4px;">
+            </div>
+
+            <div class="form-group"><label>아이콘</label>
+              <select id="consIcon">
+                <option value="🟡">🟡</option><option value="🟢">🟢</option><option value="🔵">🔵</option>
+                <option value="🔴">🔴</option><option value="🟣">🟣</option><option value="⚪">⚪</option><option value="📦">📦</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary" onclick="addConsumable()">소모품 추가</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span class="t">재고 현황</span></div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">
+              <button class="preset-btn cat-filter-btn active" onclick="filterConsumables('all', this)">전체</button>
+              <button class="preset-btn cat-filter-btn" onclick="filterConsumables('필라멘트', this)">필라멘트</button>
+              <button class="preset-btn cat-filter-btn" onclick="filterConsumables('레진', this)">레진</button>
+              <button class="preset-btn cat-filter-btn" onclick="filterConsumables('노즐', this)">노즐</button>
+              <button class="preset-btn cat-filter-btn" onclick="filterConsumables('기타', this)">기타</button>
+            </div>
+            <div id="consumablesList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 사용 기록 ============ -->
+      <div id="usage" class="page">
+        <div class="page-header">
+          <h1>사용 기록</h1>
+          <p>장비/소모품 사용 이력을 기록합니다</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">사용 기록 입력</div>
+            <div id="usage-alert"></div>
+
+            <div class="form-group"><label>사용자명</label><input type="text" id="usageUser" placeholder="누가 사용했나요?"></div>
+            <div class="form-group"><label>항목 종류</label>
+              <select id="usageType" onchange="updateItemList()">
+                <option value="equipment">장비</option><option value="consumable">소모품</option>
+              </select>
+            </div>
+            <div class="form-group"><label>항목</label><select id="usageItem"></select></div>
+            <div class="form-group"><label>사용량 <span id="usageUnitHint" class="hint" style="display:inline"></span></label><input type="number" id="usageQty" placeholder="0" step="0.1"></div>
+            <div class="form-group"><label>비고</label><textarea id="usageNotes" rows="2" placeholder="추가 설명 (선택)"></textarea></div>
+
+            <button class="btn btn-primary" onclick="addUsageLog()">기록 저장</button>
+          </div>
+          <div class="card">
+            <div class="card-title">최근 사용 기록</div>
+            <div id="usageLogList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AI 조언 ============ -->
+      <div id="ai-advisor" class="page">
+        <div class="page-header">
+          <h1>AI 조언</h1>
+          <p>재료·강도 기반 출력 설정 추천과, 예약·사용 이력을 분석한 운영 추천을 확인하세요</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">AI에게 물어보기</div>
+            <div class="form-group">
+              <label>재료 선택</label>
+              <select id="aiMaterial">
+                <option value="PLA">PLA</option>
+                <option value="PETG">PETG</option>
+                <option value="ABS">ABS</option>
+                <option value="TPU">TPU (유연 소재)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>목표 강도</label>
+              <select id="aiTargetStrength">
+                <option value="low">낮음 (시제품/목업용)</option>
+                <option value="medium" selected>보통 (일반 기능성 부품)</option>
+                <option value="high">높음 (하중 부품)</option>
+                <option value="veryhigh">매우 높음 (구조/치구용)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>문제 상황 (선택)</label>
+              <input type="text" id="aiIssue" placeholder="예: 층 분리가 발생해요, 출력물이 휘어요">
+            </div>
+            <button class="btn btn-primary" onclick="runAiAdvisor()">AI 추천 받기</button>
+            <p class="hint">* 재료 특성과 출력 경험 규칙 기반의 참고용 추천입니다 (실측 데이터 아님)</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">추천 설정값</div>
+            <div id="aiAdvisorResult">
+              <div class="empty"><div class="e-icon">🤖</div><div class="e-title">왼쪽에서 조건을 선택하고 추천을 받아보세요</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-header" style="margin-top:8px;">
+          <h1 style="font-size:var(--fs-xl);">실시간 운영 데이터 기반 추천</h1>
+          <p>실제 예약·재고·점검 데이터를 분석한 추천입니다</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">최적 예약 시간 조회</div>
+            <div class="form-group">
+              <label>장비 선택</label>
+              <select id="aiEquipmentSelect"></select>
+            </div>
+            <button class="btn btn-primary" onclick="aiCheckBestTime()">추천 받기</button>
+            <div id="aiBestTimeResult" style="margin-top:14px;"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🛠️ 점검 필요 장비</div>
+            <div id="aiMaintenanceList"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📦 소모품 소진 예측</div>
+          <div id="aiForecastList"></div>
+        </div>
+      </div>
+
+      <!-- ============ 불량 분석 (NEW) ============ -->
+      <div id="quality" class="page">
+        <div class="page-header">
+          <h1>불량 분석</h1>
+          <p>출력물 이미지를 업로드하면 불량 유형을 분석합니다 (데모용 모의 분석)</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">이미지 업로드</div>
+            <div class="dropzone" id="qaDropzone" onclick="document.getElementById('qaFileInput').click()"
+                 ondragover="event.preventDefault(); this.classList.add('drag')"
+                 ondragleave="this.classList.remove('drag')"
+                 ondrop="handleQaDrop(event)">
+              <div id="qaDropzoneContent">
+                <div class="e-icon">📷</div>
+                <div class="e-title">이미지를 드래그하거나 클릭하여 업로드</div>
+                <div class="e-desc">JPG, PNG 파일 지원</div>
+              </div>
+              <img id="qaPreview" style="display:none; max-width:100%; max-height:260px; border-radius:8px;">
+            </div>
+            <input type="file" id="qaFileInput" accept="image/*" style="display:none;" onchange="handleQaFile(this.files[0])">
+            <button class="btn btn-primary" style="margin-top:14px;" onclick="runQualityAnalysis()" id="qaAnalyzeBtn" disabled>분석하기</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">분석 결과</div>
+            <div id="qaResult">
+              <div class="empty"><div class="e-icon">🔍</div><div class="e-title">이미지를 업로드하고 분석을 실행하세요</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">최근 분석 기록</div>
+          <div id="qaHistory"></div>
+        </div>
+      </div>
+
+      <!-- ============ 공지사항 ============ -->
+      <div id="announcements" class="page">
+        <div class="page-header">
+          <h1>공지사항</h1>
+          <p>공지사항 및 점검 일정 안내</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="t">공지사항</span><span class="hint" style="margin:0;">작성/수정은 관리자 콘솔에서</span></div>
+          <div id="announcementsFull"></div>
+        </div>
+      </div>
+
+      <!-- ============ 통계 ============ -->
+      <div id="stats" class="page">
+        <div class="page-header">
+          <h1>통계</h1>
+          <p>누적 사용 통계입니다</p>
+        </div>
+        <div class="kpi-grid" id="statsDetail"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">장비별 사용 현황</div>
+            <div class="table-wrap"><table class="table">
+              <thead><tr><th>장비</th><th>예약</th><th>총 시간</th><th>사용자</th></tr></thead>
+              <tbody id="equipmentStatsTable"></tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <div class="card-title">소모품 소비 현황</div>
+            <div class="table-wrap"><table class="table">
+              <thead><tr><th>소모품</th><th>총 사용량</th><th>잔여</th></tr></thead>
+              <tbody id="consumableStatsTable"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 리포트 ============ -->
+      <div id="reports" class="page">
+        <div class="page-header">
+          <h1>리포트</h1>
+          <p>월간 사용 현황을 조회하고 PDF로 내려받으세요</p>
+        </div>
+        <div class="card">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-bottom:18px;">
+            <div class="form-group" style="margin:0; width:120px;"><label>연도</label><input type="number" id="reportYear" min="2020" max="2100"></div>
+            <div class="form-group" style="margin:0; width:100px;"><label>월</label><input type="number" id="reportMonth" min="1" max="12"></div>
+            <button class="btn btn-primary" style="width:auto;" onclick="loadReport()">조회</button>
+            <a class="btn btn-ghost" id="reportPdfLink" href="#" style="width:auto; text-decoration:none;">⬇ PDF 다운로드</a>
+          </div>
+          <div id="reportResult"><div class="empty"><div class="e-icon">🧮</div><div class="e-title">연도/월을 선택하고 조회하세요</div></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-note">XAM Lab 장비 관리 시스템 · AI 조언의 추천은 통계·규칙 기반 추정이며 참고용입니다.</div>
+  </div>
+</div>
+
+<!-- QR 모달 -->
+<div class="modal-overlay" id="qrModal" onclick="if(event.target===this) closeQr()">
+  <div class="modal-box" style="text-align:center;">
+    <h3>체크인 QR 코드</h3>
+    <img id="qrImage" style="width:220px; height:220px; background:#fff; border-radius:8px; padding:10px; border:1px solid var(--border);" alt="QR 코드">
+    <p class="hint">현장에서 스캔하면 체크인/체크아웃 페이지가 열립니다.</p>
+    <button class="btn btn-ghost btn-block" style="margin-top:12px;" onclick="closeQr()">닫기</button>
+  </div>
+</div>
+
+<!-- 연구 추가/수정 모달 -->
+<div class="modal-overlay" id="researchModal" onclick="if(event.target===this) closeResearchModal()">
+  <div class="modal-box">
+    <h3 id="researchModalTitle">새 연구 추가</h3>
+    <div id="research-form-alert"></div>
+
+    <div class="form-group"><label>연구명 *</label><input type="text" id="rsTitle" placeholder="예: A1 급냉각 테스트"></div>
+    <div class="form-group"><label>담당자 *</label><input type="text" id="rsOwner" placeholder="예: 김지원"></div>
+    <div class="form-group"><label>마감일 *</label><input type="date" id="rsDeadline"></div>
+
+    <div class="form-group">
+      <label>긴급도 *</label>
+      <div class="radio-row">
+        <label><input type="radio" name="rsUrgency" value="low">낮음</label>
+        <label><input type="radio" name="rsUrgency" value="medium" checked>보통</label>
+        <label><input type="radio" name="rsUrgency" value="high">높음</label>
+      </div>
+    </div>
+
+    <div class="form-group"><label>상태</label>
+      <select id="rsStatus">
+        <option value="진행중">진행중</option>
+        <option value="완료">완료</option>
+        <option value="보류">보류</option>
+      </select>
+    </div>
+
+    <div class="form-group"><label>설명 (선택)</label><textarea id="rsDesc" rows="2" placeholder="연구 목적, 배경 등"></textarea></div>
+
+    <div class="form-group">
+      <label>필요한 장비 (선택)</label>
+      <div id="rsEquipmentChecks" class="checkbox-grid"></div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="btn btn-primary" style="width:auto; flex:1;" onclick="saveResearchItem()">저장</button>
+      <button class="btn btn-ghost" style="width:auto; flex:1;" onclick="closeResearchModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 연구 상세 모달 -->
+<div class="modal-overlay" id="researchDetailModal" onclick="if(event.target===this) closeResearchDetail()">
+  <div class="modal-box">
+    <h3>연구 상세 정보</h3>
+    <div id="researchDetailBody"></div>
+    <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="closeResearchDetail()">닫기</button>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

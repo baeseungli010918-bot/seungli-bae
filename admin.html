@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>XAM Lab · Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ============ PIN 게이트 ============ -->
+<div id="gate" class="gate-wrap">
+  <div class="gate-card">
+    <div class="icon">🔐</div>
+    <h3 style="margin-bottom:6px; font-weight:600;">관리자 인증</h3>
+    <p class="hint" style="margin-bottom:16px;">PIN을 입력하세요 (기본값 1234, 서버 실행 시 환경변수로 변경 가능)</p>
+    <div id="gate-alert"></div>
+    <input type="password" id="pinInput" placeholder="PIN" style="text-align:center; margin-bottom:10px;" onkeydown="if(event.key==='Enter') verifyPin()">
+    <button class="btn btn-primary" onclick="verifyPin()">입장</button>
+    <div style="margin-top:16px;"><a href="/" class="hint">← 사용자 화면으로 돌아가기</a></div>
+  </div>
+</div>
+
+<!-- ============ 관리자 본문 ============ -->
+<div id="adminBody" class="app-shell" style="display:none;">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">X</div>
+      <div class="txt">
+        <div class="name">XAM Lab</div>
+        <div class="sub">Admin Console</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">Manage</div>
+    <nav class="sidebar-nav">
+      <button class="tab-btn active" data-tab="tab-equipment" onclick="showTab('tab-equipment', this)"><span class="ic">🖨️</span>Equipment</button>
+      <button class="tab-btn" data-tab="tab-users" onclick="showTab('tab-users', this)"><span class="ic">🎓</span>User Roles</button>
+      <button class="tab-btn" data-tab="tab-announcements" onclick="showTab('tab-announcements', this)"><span class="ic">📢</span>Announcements</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="side-link" onclick="cycleTheme()"><span class="ic" id="themeIcon">🖥️</span><span id="themeLabel">System theme</span></button>
+      <a class="side-link" href="/"><span class="ic">🏠</span>User Console</a>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topheader">
+      <div class="titles">
+        <div class="page-title" id="pageTitle">Equipment</div>
+        <div class="page-sub" id="pageSub">장비 추가·삭제, 수량/상태 관리</div>
+      </div>
+      <div class="hdr-actions">
+        <button class="icon-btn" id="themeToggle" onclick="cycleTheme()" title="테마 전환">🖥️</button>
+      </div>
+    </header>
+
+    <div class="container" style="max-width:1100px;">
+
+      <!-- 장비 관리 -->
+      <div id="tab-equipment" class="tab-panel active">
+        <div class="card">
+          <div class="card-title">장비 추가</div>
+          <div id="eq-alert"></div>
+          <div class="grid-3">
+            <div class="form-group"><label>ID (영문 코드)</label><input type="text" id="eqId" placeholder="예: h2d"></div>
+            <div class="form-group"><label>이름</label><input type="text" id="eqName" placeholder="예: Bambu Lab H2D"></div>
+            <div class="form-group"><label>아이콘</label><input type="text" id="eqIcon" placeholder="🖨️" value="🖨️"></div>
+          </div>
+          <div class="grid-3">
+            <div class="form-group"><label>수량</label><input type="number" id="eqQty" min="1" value="1"></div>
+            <div class="form-group"><label>시간당 비용 (원)</label><input type="number" id="eqCost" min="0" value="0"></div>
+            <div class="form-group"><label>점검 주기 (시간)</label><input type="number" id="eqMaint" min="1" value="40"></div>
+          </div>
+          <button class="btn btn-primary" style="width:auto;" onclick="addEquipment()">장비 추가</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">장비 목록</div>
+          <div id="equipmentAdminList"></div>
+        </div>
+      </div>
+
+      <!-- 사용자 등급 -->
+      <div id="tab-users" class="tab-panel">
+        <div class="card">
+          <div class="card-title">
+            <span class="t">사용자 등급 관리</span>
+            <span class="hint" style="margin:0;">예약/사용 기록이 있는 이름이 자동으로 표시됩니다</span>
+          </div>
+          <div id="user-alert"></div>
+          <div id="usersList"></div>
+        </div>
+      </div>
+
+      <!-- 공지사항 -->
+      <div id="tab-announcements" class="tab-panel">
+        <div class="card">
+          <div class="card-title">공지사항 작성</div>
+          <div id="ann-alert"></div>
+          <div class="form-group"><label>제목</label><input type="text" id="annTitle" placeholder="예: 9월 정기 점검 안내"></div>
+          <div class="form-group"><label>내용</label><textarea id="annBody" rows="3" placeholder="상세 내용"></textarea></div>
+          <div class="grid-3">
+            <div class="form-group"><label>유형</label>
+              <select id="annType">
+                <option value="notice">일반 공지</option>
+                <option value="maintenance">점검 일정</option>
+                <option value="rule">신규 규칙</option>
+              </select>
+            </div>
+            <div class="form-group"><label>작성자</label><input type="text" id="annAuthor" placeholder="관리자" value="관리자"></div>
+            <div class="form-group"><label>상단 고정</label>
+              <select id="annPinned"><option value="0">아니오</option><option value="1">예</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:auto;" onclick="addAnnouncement()">등록</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">공지사항 목록</div>
+          <div id="announcementsAdminList"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/static/admin.js"></script>
+</body>
+</html>
